@@ -1,8 +1,14 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
-#include <string>
+#include <cstring>
+#include <fstream>
+#include <limits>
+#include <sstream>
+#include <stdexcept>
 #include <vector>
+
 
 /** 
  * @brief compressed sprase row matrix representation

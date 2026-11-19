@@ -1,14 +1,5 @@
 #include "csr.h"
 
-#include <algorithm>
-#include <cstdint>
-#include <cstring>
-#include <fstream>
-#include <limits>
-#include <sstream>
-#include <stdexcept>
-#include <vector>
-
 
 namespace {
     const char CSR_MAGIC[8] = {
