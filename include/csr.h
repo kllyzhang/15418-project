@@ -1,12 +1,8 @@
 #pragma once
 
-#include <algorithm>
+#include <cstddef>
 #include <cstdint>
-#include <cstring>
-#include <fstream>
-#include <limits>
-#include <sstream>
-#include <stdexcept>
+#include <string>
 #include <vector>
 
 

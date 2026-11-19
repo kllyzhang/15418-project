@@ -1,5 +1,7 @@
 #include "sequential.h"
 
+#include <cstdint>
+
 
 void solve_sequential(
         const CSRMatrix& L, 
