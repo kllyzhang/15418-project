@@ -1,5 +1,6 @@
 #include "csr.h"
 #include "sequential.h"
+#include "level.h"
 
 #include <algorithm>
 #include <chrono>
@@ -9,13 +10,18 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <variant>
 #include <vector>
 #include <unistd.h>
 
 #include <omp.h>
 
-
 #define ERROR_TOLERANCE 1e-8
+
+
+using SolverSchedule = std::variant<
+    LevelSchedule
+>;
 
 
 namespace SolveMethod {
@@ -80,6 +86,27 @@ int main(int argc, char *argv[]) {
     std::vector<double> b = matvec(L, solution);
     std::vector<double> x;
 
+    SolverSchedule schedule;
+    switch (solve_method) {
+    case SolveMethod::SEQUENTIAL:
+        break;
+    case SolveMethod::LEVELS:
+        schedule = build_level_schedule(L);
+        break;
+    case SolveMethod::SYNC_SPARSE:
+        std::cerr << "Solver failed: " 
+                  << SolveMethod::SYNC_SPARSE << " not yet implemented\n";
+        exit(EXIT_FAILURE);
+    case SolveMethod::BARRIER_LIST:
+        std::cerr << "Solver failed: " 
+                  << SolveMethod::BARRIER_LIST << " not yet implemented\n";
+        exit(EXIT_FAILURE);
+    default:
+        std::cerr << "Solver failed: " 
+                  << "invalid solve_method " << solve_method << '\n';
+        exit(EXIT_FAILURE);
+    }
+
     double time_init = std::chrono::duration<double, std::milli>(
         std::chrono::steady_clock::now() - start_init).count();
 
@@ -90,9 +117,8 @@ int main(int argc, char *argv[]) {
         solve_sequential(L, b, x);
         break;
     case SolveMethod::LEVELS:
-        std::cerr << "Solver failed: " 
-                  << SolveMethod::LEVELS << " not yet implemented\n";
-        exit(EXIT_FAILURE);
+        solve_level(L, b, x, std::get<LevelSchedule>(schedule));
+        break;
     case SolveMethod::SYNC_SPARSE:
         std::cerr << "Solver failed: " 
                   << SolveMethod::SYNC_SPARSE << " not yet implemented\n";

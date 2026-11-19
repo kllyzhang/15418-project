@@ -1,9 +1,16 @@
-CXX = g++
-CXXFLAGS = -Wall -O3 -std=c++17 -m64 -Iinclude -Xpreprocessor -fopenmp -Wno-unknown-pragmas
-
+OS:=$(shell uname)
 MATRIX_DIR = data/input/matrices
 CACHE_DIR = data/input/cache
 CHUNK_SIZE = 40m
+
+CXX = g++
+CXXFLAGS = -Wall -O3 -std=c++17 -m64 -Iinclude -Xpreprocessor -fopenmp -Wno-unknown-pragmas
+ifeq ($(OS), Darwin)
+CXXFLAGS += -I/opt/homebrew/opt/libomp/include
+CXXFLAGS += -L/opt/homebrew/opt/libomp/lib 
+CXXFLAGS += -lomp
+CXXFLAGS += -Wno-unused-command-line-argument
+endif
 
 .PHONY: all clean split-csr join-csr
 
@@ -13,7 +20,7 @@ bin/converter: apps/converter.cpp build/csr.o
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-bin/solver: apps/solver.cpp build/csr.o build/sequential.o
+bin/solver: apps/solver.cpp build/csr.o build/sequential.o build/level.o
 	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
@@ -22,6 +29,10 @@ build/csr.o: src/csr.cpp include/csr.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 build/sequential.o: src/sequential.cpp include/sequential.h include/csr.h
+	@mkdir -p build
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+build/level.o: src/level.cpp include/level.h include/csr.h
 	@mkdir -p build
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
