@@ -12,6 +12,9 @@
 #include <vector>
 #include <unistd.h>
 
+#include <omp.h>
+
+
 #define ERROR_TOLERANCE 1e-8
 
 
@@ -24,6 +27,8 @@ namespace SolveMethod {
 
 
 int main(int argc, char *argv[]) {
+    auto start_init = std::chrono::steady_clock::now();
+
     std::string input_path;
     int num_threads = 0;
     char solve_method = '\0';
@@ -61,6 +66,8 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    omp_set_num_threads(num_threads);
+
     CSRMatrix L;
     try {
         L = load_csr_matrix(input_path);
@@ -73,7 +80,10 @@ int main(int argc, char *argv[]) {
     std::vector<double> b = matvec(L, solution);
     std::vector<double> x;
 
-    auto start_time = std::chrono::steady_clock::now();
+    double time_init = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - start_init).count();
+
+    auto start_compute = std::chrono::steady_clock::now();
 
     switch (solve_method) {
     case SolveMethod::SEQUENTIAL:
@@ -97,9 +107,8 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    auto end_time = std::chrono::steady_clock::now();
-    double elapsed_ms = std::chrono::duration<double, std::milli>(
-        end_time - start_time).count();
+    double time_compute = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - start_compute).count();
     
     double max_error = 0.0;
     for (uint32_t i = 0; i < L.n; i++) {
@@ -110,17 +119,19 @@ int main(int argc, char *argv[]) {
         }
         max_error = std::max(max_error, error);
     }
+
     bool is_correct = std::isfinite(max_error) && max_error < ERROR_TOLERANCE;
 
-    std::cout << std::setprecision(6)
-              << "Matrix:       " << input_path << '\n'
-              << "Rows:         " << L.n << '\n'
-              << "Nonzeros:     " << L.num_non_zeroes() << '\n'
-              << "Method:       " << solve_method << '\n'
-              << "Threads:      " << num_threads << '\n'
-              << "Time (ms):    " << elapsed_ms << '\n'
-              << "Max error:    " << max_error << '\n'
-              << "Correct:      " << (is_correct ? "PASS" : "FAIL") << '\n';
+    std::cout << std::setprecision(10)
+              << "Matrix:               " << input_path << '\n'
+              << "Rows:                 " << L.n << '\n'
+              << "Nonzeros:             " << L.num_non_zeroes() << '\n'
+              << "Method:               " << solve_method << '\n'
+              << "Threads:              " << num_threads << '\n'
+              << "Init. Time (ms):      " << time_init << '\n'
+              << "Compute Time (ms):    " << time_compute << '\n'
+              << "Max error:            " << max_error << '\n'
+              << "Correct:              " << (is_correct ? "PASS" : "FAIL") << '\n';
 
     return 0;
 }
