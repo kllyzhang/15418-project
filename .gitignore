@@ -1,5 +1,10 @@
 .DS_Store
 .vscode
+bin/
+build/
+data/input/cache
+data/input/suite_sparse_mtx/
+reports/milestone/
 reports/proposal/
 *.o
 *.d
